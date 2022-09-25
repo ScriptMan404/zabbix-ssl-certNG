@@ -9,25 +9,19 @@
 f=$1
 sni=$2
 port=$3
-proto=$4
-
-if [ -n "$proto" ]
-then
-    starttls="-starttls $proto"
-fi
 
 case $f in
 -d)
-end_date=$(timeout 0.3 openssl s_client -connect $2:$3 -servername $2 $4 2> /dev/null | openssl x509 -noout -enddate | sed -e "s/^notAfter=//")
+end_date=$(timeout 0.3 openssl s_client -connect $2:$3 -crlf -servername $2 2> /dev/null | openssl x509 -noout -enddate | sed -e "s/^notAfter=//")
 echo $((($(date +%s --date "$end_date") - $(date +%s)) / 86400))
 ;;
 
 -i)
-echo $(timeout 0.3 openssl s_client -connect $2:$3 -servername $2 $4 2> /dev/null | openssl x509 -noout -issuer | sed -e "s/.*CN = *//")
+echo $(timeout 0.3 openssl s_client -connect $2:$3 -crlf -servername $2 2> /dev/null | openssl x509 -noout -issuer | sed -e "s/.*CN = *//")
 ;;
 
 -s)
-echo $(timeout 0.3 openssl s_client -connect $2:$3 -servername $2 $4 2> /dev/null | openssl x509 -noout -subject | sed -e "s/.*CN = *//")
+echo $(timeout 0.3 openssl s_client -connect $2:$3 -crlf -servername $2 2> /dev/null | openssl x509 -noout -subject | sed -e "s/.*CN = *//")
 ;;
 
 *)

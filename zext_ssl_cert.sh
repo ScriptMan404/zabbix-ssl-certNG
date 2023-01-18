@@ -25,10 +25,16 @@ echo $(timeout $timeout openssl s_client -connect $2:$3 -crlf -servername $2 2> 
 echo $(timeout $timeout openssl s_client -connect $2:$3 -crlf -servername $2 2> /dev/null | openssl x509 -noout -subject | sed -e "s/.*CN = *//")
 ;;
 
+-t)
+tls=$(timeout $timeout openssl s_client -connect $2:$3 -crlf -servername $2 2> /dev/null | grep -e "TLSv1.*")
+echo $tls | sed -e "s/^New, //;s/\,.*$//"
+;;
+
 *)
-echo "usage : $0 [-i|-d|-s] sni port"
+echo "usage : $0 [-i|-d|-s|-t] sni port"
 echo "        -i Show Issuer"
 echo "        -d Show valid days remaining"
 echo "        -s Show Subject"
+echo "        -t Show TLS version"
 ;;
 esac

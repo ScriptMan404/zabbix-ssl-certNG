@@ -1,0 +1,105 @@
+zabbix_export:
+  version: '6.0'
+  date: '2023-01-19T07:54:20Z'
+  groups:
+    -
+      uuid: 23b4cb78db6e4cd194f3600a0006af6c
+      name: MyTemplates
+  templates:
+    -
+      uuid: a560bc62408b44ef9c3e73df720353a9
+      template: 'Template SSL Cert Check External'
+      name: 'Template SSL Cert Check External'
+      groups:
+        -
+          name: MyTemplates
+      items:
+        -
+          uuid: a6214c1e902848d79eaf3577c6bef0c8
+          name: 'SSL certificate validity'
+          type: EXTERNAL
+          key: 'zext_ssl_cert.sh[-d,{$SNI},{$SSL_PORT}]'
+          delay: 1d
+          history: 7d
+          value_type: FLOAT
+          units: days
+          tags:
+            -
+              tag: Application
+              value: HTTPS
+          triggers:
+            -
+              uuid: 8953bba204d345b9a2ff14388672a6b0
+              expression: 'last(/CERTIFICATS SSL/zext_ssl_cert.sh[-d,{$SNI},{$SSL_PORT}])<0'
+              name: 'SSL certificate on {HOSTNAME} expired'
+              priority: DISASTER
+            -
+              uuid: 29369db4a42447339df29de67dad1125
+              expression: 'last(/CERTIFICATS SSL/zext_ssl_cert.sh[-d,{$SNI},{$SSL_PORT}])<7'
+              name: 'SSL certificate on {HOSTNAME} expires in less than 7 days ({ITEM.VALUE} days remaining)'
+              priority: HIGH
+              dependencies:
+                -
+                  name: 'SSL certificate on {HOSTNAME} expired'
+                  expression: 'last(/CERTIFICATS SSL/zext_ssl_cert.sh[-d,{$SNI},{$SSL_PORT}])<0'
+            -
+              uuid: c1583e26a3c04ff1b16fdae6dc41ee47
+              expression: 'last(/CERTIFICATS SSL/zext_ssl_cert.sh[-d,{$SNI},{$SSL_PORT}])<15'
+              name: 'SSL certificate on {HOSTNAME} expires in less than 15 days ({ITEM.VALUE} days remaining)'
+              priority: AVERAGE
+              dependencies:
+                -
+                  name: 'SSL certificate on {HOSTNAME} expires in less than 7 days ({ITEM.VALUE} days remaining)'
+                  expression: 'last(/CERTIFICATS SSL/zext_ssl_cert.sh[-d,{$SNI},{$SSL_PORT}])<7'
+            -
+              uuid: 207fc62e28e24600852f8adf4e688686
+              expression: 'last(/CERTIFICATS SSL/zext_ssl_cert.sh[-d,{$SNI},{$SSL_PORT}])<30'
+              name: 'SSL certificate on {HOSTNAME} expires in less than 30 days ({ITEM.VALUE} days remaining)'
+              priority: WARNING
+              dependencies:
+                -
+                  name: 'SSL certificate on {HOSTNAME} expires in less than 15 days ({ITEM.VALUE} days remaining)'
+                  expression: 'last(/CERTIFICATS SSL/zext_ssl_cert.sh[-d,{$SNI},{$SSL_PORT}])<15'
+        -
+          uuid: 6a34b93b030740b6b375e4d1cb7c19d1
+          name: 'SSL certificate issuer'
+          type: EXTERNAL
+          key: 'zext_ssl_cert.sh[-i,{$SNI},{$SSL_PORT}]'
+          delay: 1d
+          trends: '0'
+          value_type: TEXT
+          tags:
+            -
+              tag: Application
+              value: HTTPS
+        -
+          uuid: 5da1219ade97447790710a1440a806e8
+          name: 'SSL certificate subject'
+          type: EXTERNAL
+          key: 'zext_ssl_cert.sh[-s,{$SNI},{$SSL_PORT}]'
+          delay: 1d
+          trends: '0'
+          value_type: TEXT
+          tags:
+            -
+              tag: Application
+              value: HTTPS
+        -
+          uuid: 65ff1700cf0f4fd891d5318618d91d10
+          name: 'TLS version'
+          type: EXTERNAL
+          key: 'zext_ssl_cert.sh[-t,{$SNI},{$SSL_PORT}]'
+          delay: 1d
+          trends: '0'
+          value_type: TEXT
+          tags:
+            -
+              tag: Application
+              value: HTTPS
+      macros:
+        -
+          macro: '{$SNI}'
+          description: 'Server FQDN or IP address'
+        -
+          macro: '{$SSL_PORT}'
+          value: '443'
